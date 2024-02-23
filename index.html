@@ -7,10 +7,18 @@
   <script>const importObject = {
     imports: { imported_func: (arg) => console.log(arg) },
   };
-  WebAssembly.instantiateStreaming(fetch("simple.wasm"), importObject).then(
+  WebAssembly.instantiateStreaming(fetch("sumofarray.wasm"), importObject).then(
   (obj) => {
-   obj.instance.exports.exported_func();
-   const result = obj.instance.exports.sum(3,4) 
+   const numbers = [1, 2, 3, 4, 5];
+   const numBytes = numbers.length * 4;
+   const ptr = obj.instance.exports.memory.buffer.byteLength;
+   obj.instance.exports.memory.grow(numBytes);
+   const data = new Uint32Array(obj.instance.exports.memory.buffer, ptr, numbers.length);
+   for (let i = 0; i < numbers.length; i++) {
+      data[i] = numbers[i];
+    }
+  const result = obj.instance.exports.sum(ptr, numbers.length);
+
    console.log(result);
    document.getElementById("test").textContent = result
   }
